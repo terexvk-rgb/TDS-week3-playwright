@@ -2,8 +2,7 @@ import asyncio
 import re
 from playwright.async_api import async_playwright
 
-seeds = list(range(73, 83))
-BASE = "https://sanand0.github.io/tdsdata/js_table/?seed={}"
+START_URL = "https://sanand0.github.io/tdsdata/js_table/?seed=73"
 
 
 async def main():
@@ -13,26 +12,27 @@ async def main():
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
 
-        for seed in seeds:
-            url = BASE.format(seed)
-            await page.goto(url)
+        await page.goto(START_URL)
 
-            # wait for tables to load
+        for _ in range(10):  # seeds 73 → 82
             await page.wait_for_selector("table")
 
-            tables_text = await page.inner_text("table")
+            table_text = await page.inner_text("table")
+            numbers = list(map(int, re.findall(r"-?\d+", table_text)))
 
-            numbers = list(map(int, re.findall(r"-?\d+", tables_text)))
             page_sum = sum(numbers)
-
-            print(f"Seed {seed} sum={page_sum}")
-
             total_sum += page_sum
+
+            print(f"PAGE_SUM={page_sum}", flush=True)
+
+            next_btn = page.locator("text=Next")
+            if await next_btn.count() > 0:
+                await next_btn.click()
+                await page.wait_for_timeout(1000)
 
         await browser.close()
 
-    # IMPORTANT: exact format for grader
-    print(f"TOTAL_SUM={total_sum}")
+    print(f"TOTAL_SUM={total_sum}", flush=True)
 
 
 asyncio.run(main())
