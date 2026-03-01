@@ -22,9 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install playwright
-          playwright install
+          playwright install --with-deps
 
       - name: Run scraper
         run: python scrape_sum.py
-
-        
